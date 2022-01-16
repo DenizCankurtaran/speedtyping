@@ -11,27 +11,40 @@
 }
 
 .word {
-	/*padding-right: 2%;*/
-	background-color: rgba(200, 200, 200, .8);
+	background-color: rgba(240, 240, 240, .8);
 }
 .wordcontainer {
-	/*word-wrap: break-word;*/
-	max-width: 33vw;
+	max-width: 40vw;
 	overflow-wrap:anywhere;
 }
 
 .textcontainer {
-	width: 33vw;
+	width: 40vw;
 	line-break: strict;
 }
 
 .currentLetter {
-	background-color: blue;
+	background-color: rgba(200, 200, 200 .8);
 }
 
 .wrong {
-	background-color: red;
+	background-color: rgba(200, 0, 0, .5);
 }
 .correct {
-	background-color: green;
+	background-color: rgba(0, 200, 0, .5);
+}
+
+.actionbar {
+	display: flex;
+	align-items: center;
+}
+
+.result {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.number {
+	width: 20%;
 }

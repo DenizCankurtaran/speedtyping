@@ -11,11 +11,33 @@ function App() {
   const [wrong, setWrong] = useState(false)
   const [correctLetterIndex, setCorrectLetterIndex] = useState(0)
 
-  const renderedWords = 50
+  const [running, setRunning] = useState(false)
+
+  const [letterCounter, setLetterCounter] = useState(0)
+
+  const [isActive, setIsActive] = useState(false)
+  const [time, setTime] = useState(0);
+
+  const [isFinished, setIsFinished] = useState(false)
+
+  const [renderedWords, setRenderedWords] = useState(50)
+
   
   useEffect(() => {
     generateWords()
   }, [])
+  
+  const reset = () => {
+    setInput('')
+    setWordIndex(0)
+    setLetterIndex(0)
+    setWrong(false)
+    setCorrectLetterIndex(0)
+    setLetterCounter(0)
+
+    setTime(0)
+    setIsFinished(false)
+  }
 
   const generateWords = () => {
     let tmp = []
@@ -28,13 +50,17 @@ function App() {
   }
 
   const onType = (e) => {
+    if (!running){
+      setRunning(true)
+      setIsActive(true)
+    }
     setInput(e.target.value)
     setLetterIndex(letterIndex + e.target.value.length - input.length)
     setWrong(!words[wordIndex].startsWith(e.target.value))
     if (!wrong) {
       setCorrectLetterIndex(letterIndex)
     }
-    console.log(e.target.value === words[wordIndex]);
+    setLetterCounter(letterCounter +1)
     console.log('current word', words[wordIndex], 'current letter', words[wordIndex][letterIndex], 'word index',wordIndex, 'letter index', letterIndex)
     if (e.target.value.endsWith(' ') && words[wordIndex][letterIndex] === ' ' && e.target.value === words[wordIndex]) {
       setWordIndex(wordIndex + 1)
@@ -42,6 +68,11 @@ function App() {
 
       setInput('')
       setCorrectLetterIndex(0)
+      if (wordIndex === words.length -1) {
+        setRunning(false)
+        setIsActive(false)
+        setIsFinished(true)
+      }
     }
   }
 
@@ -57,40 +88,110 @@ function App() {
     if (index === wordIndex && index2 === letterIndex) {
       className.push('currentLetter')
     }
-    let name =  className.join(' ')
-    console.log(name);
-    return name
+    return className.join(' ')
 
   }
+  
+  useEffect(() => {
+    let interval = null
+  
+    if (isActive && running) {
+      interval = setInterval(() => {
+        setTime((time) => time + 10)
+      }, 10)
+    } else {
+      clearInterval(interval)
+    }
+    return () => {
+      clearInterval(interval)
+    }
+  }, [isActive, running])
+
+  const changeRenderedWords = (e) => {
+    let number = e.target.value
+    setRenderedWords(number)
+    reset()
+    generateWords()
+    
+  }
+  
 
   return (
     <div className='mainview'>
       <div>
 
         <div className='p-6 bg-white rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 textcontainer'>
-          <div className='mb-3 font-normal text-gray-700 dark:text-gray-400 wordcontainer'>
-            {
-              words.map((word, index) => {
-                return (
-                  <span key={index + word} className={ index === wordIndex ? 'word' : '' }>
-                    {
-                      [...word].map((letter, index2) => {
-                        return (
-                          <span key={index + letter + index2} className={letterClassName(index, index2)}>
-                            {letter}
-                          </span>
-                        )
-                      })
-                    }
+          {
+            isFinished
+            ?
+              <div className="mb-3 text-gray-700 dark:text-gray-400">
+                <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white text-center">
+                  Result: 
+                  <div>
+                    {renderedWords} words in 
+                  </div>
+                  <span className="digits">
+                    {("0" + Math.floor((time / 60000) % 60)).slice(-2)}:
                   </span>
-                )
-              })
-            }
+                  <span className="digits">
+                    {("0" + Math.floor((time / 1000) % 60)).slice(-2)}.
+                  </span>
+                  <span className="digits mili-sec">
+                    {("0" + ((time / 10) % 100)).slice(-2)}
+                  </span>  
+                </h5>
+                <div className='result'>
+                  <ul class="w-48 text-sm font-medium text-gray-900 bg-white rounded-lg border border-gray-200 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                      <li class="py-2 px-4 w-full rounded-t-lg border-b border-gray-200 dark:border-gray-600">
+                        WPM: { ("0" + Math.floor(words.length / ((time / 60000) % 60))).slice(-2)}
+                      </li>
+                      <li class="py-2 px-4 w-full border-b border-gray-200 dark:border-gray-600">
+                        Accuarcy: { words.map(words => [...words].length).reduce((acc, curr) => acc + curr) / letterCounter}
+                      </li>
+                  </ul>
+                </div>
+              </div>
+            :
+            <div className='mb-3 text-xl text-gray-700 dark:text-gray-400 wordcontainer'>
+              {
+                words.map((word, index) => {
+                  return (
+                    <span key={index + word} className={ index === wordIndex ? 'word' : '' }>
+                      {
+                        [...word].map((letter, index2) => {
+                          return (
+                            <span key={index + letter + index2} className={letterClassName(index, index2)}>
+                              {letter}
+                            </span>
+                          )
+                        })
+                      }
+                    </span>
+                  )
+                })
+              }
 
-          </div>
+            </div>
+          }
         </div>
-        <div>
+        <div className='actionbar'>
           <input type='text' value={input} onChange={onType} className='shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light' />
+          <button onClick={ () => {
+            reset()
+            generateWords()
+          }} type='button' class='p-2 text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800'>
+            <svg className='w-6 h-6' fill='none' stroke='currentColor' viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' /></svg>
+          </button>
+          <div className="clock">
+            <span className="digits">
+              {("0" + Math.floor((time / 60000) % 60)).slice(-2)}:
+            </span>
+            <span className="digits mili-sec">
+              {("0" + Math.floor((time / 1000) % 60)).slice(-2)}
+            </span>
+          </div>
+          <input type='number' value={renderedWords} onChange={changeRenderedWords} className=' number shadow-sm bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500 dark:shadow-sm-light' />
+
         </div>
       </div>
     </div>
