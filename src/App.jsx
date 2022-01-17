@@ -126,7 +126,7 @@ function App() {
 
 
   return (
-    <div className='mainview bg-gray-800'>
+    <div className='mainview'>
       <div>
 
         <div className='bg-gray-800 p-6 rounded-lg border border-gray-200 shadow-md dark:bg-gray-800 dark:border-gray-700 textcontainer'>
